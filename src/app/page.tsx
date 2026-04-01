@@ -44,7 +44,7 @@ export default function Home() {
     if (type in headingPrefixes) {
       const prefix = headingPrefixes[type];
       // Remove any existing heading prefix first
-      let cleanLine = currentLine.replace(/^#{1,3}\s*/, '');
+      const cleanLine = currentLine.replace(/^#{1,3}\s*/, '');
       
       if (currentLine.startsWith(prefix)) {
         // Already has this heading → remove it (toggle off)

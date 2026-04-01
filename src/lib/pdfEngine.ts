@@ -20,7 +20,7 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
   const { securityText } = options;
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
 
   // Load watermark image (diagonal "Confidential By HOOC AI" pattern)
   let watermarkImage;
@@ -236,8 +236,8 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
     
     let inPreparedFor = false;
     let inPreparedBy = false;
-    let preparedForLines: string[] = [];
-    let preparedByLines: string[] = [];
+    const preparedForLines: string[] = [];
+    const preparedByLines: string[] = [];
 
     for (const line of contentLines) {
       const trimmed = line.trim();
