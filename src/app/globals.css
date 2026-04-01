@@ -3,25 +3,181 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #050505;
+  --foreground: #f4f4f5;
+  --accent: #22d3ee;
+  --accent-dim: rgba(34, 211, 238, 0.15);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* ===== Custom Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* ===== Custom Animations ===== */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(34, 211, 238, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.8); }
+}
+
+@keyframes scan-line {
+  0% { top: -2px; }
+  100% { top: 100%; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float-in {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 4s linear infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.animate-float-in {
+  animation: float-in 0.5s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ===== Glassmorphism Utilities ===== */
+.glass {
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(39, 39, 42, 0.5);
+}
+
+.glass-light {
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ===== Toolbar Button Premium Hover ===== */
+.toolbar-btn {
+  position: relative;
+  transition: all 0.2s ease;
+}
+.toolbar-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(34, 211, 238, 0.15), transparent);
+  transition: opacity 0.2s ease;
+}
+.toolbar-btn:hover::after {
+  opacity: 1;
+}
+
+/* ===== Preview Panel Typography ===== */
+.prose h1 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #000000;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+.prose h2 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #000000;
+  margin-top: 2.5rem;
+  text-transform: uppercase;
+}
+.prose h3 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #18181b;
+  margin-top: 2rem;
+}
+.prose p {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin-bottom: 1.5rem;
+  line-height: 1.8;
+  color: #3f3f46;
+  font-size: 0.95rem;
+}
+.prose ul, .prose ol {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #3f3f46;
+  line-height: 1.8;
+}
+.prose strong {
+  color: #000000;
+  font-weight: 600;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+.prose th, .prose td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  color: #3f3f46;
+}
+.prose th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #000;
+}
+.prose hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
 }
