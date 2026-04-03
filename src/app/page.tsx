@@ -571,7 +571,7 @@ This PRD requires formal approval before development begins.
                 {/* Center logo watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logo.jpeg" alt="" className="w-44 h-44 opacity-[0.06]" draggable={false} />
+                  <img src="/logo.png" alt="" className="w-44 h-44 opacity-[0.06]" draggable={false} />
                 </div>
 
                 {/* Paper Watermark Background */}

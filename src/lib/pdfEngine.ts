@@ -34,13 +34,13 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
     console.error("Failed to load watermark image", err);
   }
 
-  // Load company logo (HOOC AI "H" logo) - supports JPEG
+  // Load company logo (HOOC AI "H" logo) - transparent PNG
   let logoImage;
   try {
-    const logoRes = await fetch('/logo.jpeg');
+    const logoRes = await fetch('/logo.png');
     if (logoRes.ok) {
       const logoBytes = await logoRes.arrayBuffer();
-      logoImage = await pdfDoc.embedJpg(logoBytes);
+      logoImage = await pdfDoc.embedPng(logoBytes);
     }
   } catch (err) {
     console.error("Failed to load logo image", err);
@@ -85,8 +85,8 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
     // LAYER 2: Company Identity Branding
     // ============================================
 
-    // --- Header: Small logo top-left on all pages ---
-    if (logoImage) {
+    // --- Header: Small logo top-left on all pages (EXCEPT cover page) ---
+    if (logoImage && pageIndex > 0) {
       const headerLogoSize = 30;
       page.drawImage(logoImage, {
         x: 35,
@@ -167,10 +167,10 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
     // COVER PAGE — matches Hooc AI sample exactly
     // =============================================
 
-    // Embed logo image in cover page header
+    // Embed logo image in cover page header (transparent PNG)
     let logoDataUrl: string | null = null;
     try {
-      const logoRes = await fetch('/logo.jpeg');
+      const logoRes = await fetch('/logo.png');
       if (logoRes.ok) {
         const logoBlob = await logoRes.blob();
         logoDataUrl = await new Promise<string>((resolve) => {
@@ -187,23 +187,32 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
     doc.setFillColor(200, 210, 240);
     doc.rect(0, 0, pageWidth, 75, 'F');
 
-    // Logo in header (left side)
+    // Logo in header (left side) — transparent PNG, no white bg
     if (logoDataUrl) {
-      doc.addImage(logoDataUrl, 'JPEG', 30, 12, 45, 45);
+      doc.addImage(logoDataUrl, 'PNG', 30, 12, 50, 50);
     }
 
-    // Company name in header
-    doc.setFontSize(20);
+    // Company name in header — matching reference image (two colors)
+    const logoStartX = 85;
+    
+    doc.setFontSize(28);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 50, 100);
-    doc.text('Hooc AI', 82, 35);
+    
+    // 'Hooc' in dark blue
+    doc.setTextColor(29, 39, 87);
+    doc.text('Hooc', logoStartX, 38);
+    
+    // 'AI' in teal
+    const hoocWidth = doc.getTextWidth('Hooc');
+    doc.setTextColor(21, 149, 178);
+    doc.text(' AI', logoStartX + hoocWidth, 38);
 
-    // Tagline
-    doc.setFontSize(7);
+    // Tagline in dark blue
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 80, 120);
-    doc.text('Committed to Your', 82, 48);
-    doc.text('Business Growth', 82, 57);
+    doc.setTextColor(29, 39, 87);
+    doc.text('Committed to Your', logoStartX, 52);
+    doc.text('Business Growth', logoStartX, 64);
 
     // Contact info — right side of header
     doc.setFontSize(9);
