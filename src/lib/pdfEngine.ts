@@ -46,11 +46,34 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
     console.error("Failed to load logo image", err);
   }
 
+  // Load second overlay/background layer image (layer2.png) if provided
+  let layer2Image;
+  try {
+    const l2Res = await fetch('/layer2.png');
+    if (l2Res.ok) {
+      const l2Bytes = await l2Res.arrayBuffer();
+      layer2Image = await pdfDoc.embedPng(l2Bytes);
+    }
+  } catch (err) {
+    // layer2.png is optional — silently skip
+  }
+
   const pages = pdfDoc.getPages();
 
   for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
     const page = pages[pageIndex];
     const { width, height } = page.getSize();
+
+    // Skip all watermarks and patterns on the cover page (index 0)
+    if (pageIndex === 0) {
+      // Still apply anti-scraping shield to cover page for protection if desired,
+      // but keeping it clean as per user reference is priority.
+      continue; 
+    }
+
+    // All pages from second page onwards use standard Right-tilt
+    const angle = 45;
+    const rad = angle * (Math.PI / 180);
 
     // ============================================
     // LAYER 1A: Full-page watermark image
@@ -62,22 +85,42 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
         y: 0,
         width: width,
         height: height,
-        opacity: 0.15,
+        opacity: 0.35,
       });
     }
 
     // ============================================
     // LAYER 1B: Centered logo watermark
-    // HOOC AI "H" logo in center at low opacity
+    // HOOC AI "H" logo in center
     // ============================================
     if (logoImage) {
-      const logoSize = 180;
+      const logoSize = 320;
+      const cx = width / 2;
+      const cy = height / 2;
+      
+      const rotX = cx - (logoSize / 2) * Math.cos(rad) + (logoSize / 2) * Math.sin(rad);
+      const rotY = cy - (logoSize / 2) * Math.sin(rad) - (logoSize / 2) * Math.cos(rad);
+      
       page.drawImage(logoImage, {
-        x: (width - logoSize) / 2,
-        y: (height - logoSize) / 2,
+        x: rotX,
+        y: rotY,
         width: logoSize,
         height: logoSize,
-        opacity: 0.08,
+        opacity: 0.15,
+        rotate: degrees(angle),
+      });
+    }
+
+    // ============================================
+    // LAYER 1C: Second overlay image layer (layer2.png)
+    // ============================================
+    if (layer2Image) {
+      page.drawImage(layer2Image, {
+        x: 0,
+        y: 0,
+        width: width,
+        height: height,
+        opacity: 0.15,
       });
     }
 
@@ -85,9 +128,9 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
     // LAYER 2: Company Identity Branding
     // ============================================
 
-    // --- Header: Small logo top-left on all pages (EXCEPT cover page) ---
-    if (logoImage && pageIndex > 0) {
-      const headerLogoSize = 30;
+    // --- Header: Small logo (Always Vertical) ---
+    if (logoImage) {
+      const headerLogoSize = 35;
       page.drawImage(logoImage, {
         x: 35,
         y: height - 55,
@@ -97,35 +140,25 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
       });
     }
 
-
-
     // ============================================
     // LAYER 3: Anti-Scraping Shield (LAST — on top)
-    // Dense invisible text that pollutes copy-paste
+    // Optimized density to prevent rendering lag/jerky scrolling
     // ============================================
-    const antiCopyText = securityText.repeat(20);
-
-    // Horizontal dense pass — every 12px
-    for (let y = 0; y < height; y += 12) {
+    const antiCopyText = securityText.repeat(10);
+    for (let y = 0; y < height; y += 80) { // Increased from 15 to 80 for performance
       page.drawText(antiCopyText, {
-        x: 0,
-        y,
-        size: 4,
-        font: helveticaFont,
-        color: rgb(1, 1, 1),
-        opacity: 0.01,
+        x: 0, y, size: 4, font: helveticaFont, color: rgb(1, 1, 1), opacity: 0.005,
       });
     }
 
-    // Diagonal pass — 45 degree angle
-    for (let y = -200; y < height + 200; y += 20) {
+    for (let y = -400; y < height + 400; y += 100) { // Increased from 30 to 100
       page.drawText(antiCopyText, {
         x: 0,
         y,
         size: 3,
         font: helveticaFont,
         color: rgb(1, 1, 1),
-        opacity: 0.01,
+        opacity: 0.005,
         rotate: degrees(45),
       });
     }
@@ -323,9 +356,7 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
     doc.text(preparedByName, rightCol, bottomY + 18);
     doc.text('Hooc AI Technologies', rightCol, bottomY + 33);
 
-    // Dark footer bar on cover page
-    doc.setFillColor(50, 50, 50);
-    doc.rect(0, pageHeight - 30, pageWidth, 30, 'F');
+    // (Removed dark footer bar to match clean A4 paper look)
 
     // =============================================
     // CONTENT PAGES (page 2 onwards)
@@ -343,7 +374,7 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
     }
     
     const bodyContent = contentLines.slice(contentStartIndex).join('\n');
-    doc.setFontSize(11);
+    doc.setFontSize(12); // Increased from 11
     doc.setTextColor(0, 0, 0);
     const lines = doc.splitTextToSize(bodyContent, contentWidth);
     let yPos = margin + 50; // space for header logo
@@ -389,7 +420,7 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
         doc.text(cleanLine.replace('### ', ''), x, yPos, { align });
         yPos += 8;
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
+        doc.setFontSize(12); // Reset to 12
       }
       // ## headings (Section level)
       else if (cleanLine.startsWith('## ')) {
@@ -403,7 +434,7 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 10;
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
+        doc.setFontSize(12); // Reset to 12
       }
       // # headings (Title level)
       else if (cleanLine.startsWith('# ')) {
@@ -416,7 +447,7 @@ export async function exportToMultiLayerPDF(options: PDFExportOptions) {
         doc.line(margin, yPos, pageWidth - margin, yPos);
         yPos += 10;
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
+        doc.setFontSize(12); // Reset to 12
       }
       // --- horizontal rule
       else if (cleanLine === '---') {
