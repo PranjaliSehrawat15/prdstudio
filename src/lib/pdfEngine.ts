@@ -142,26 +142,39 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
 
     // ============================================
     // LAYER 3: Anti-Scraping Shield (LAST — on top)
-    // Optimized density to prevent rendering lag/jerky scrolling
+    // High-density phantom mesh to block clean copy-pasting
     // ============================================
-    const antiCopyText = securityText.repeat(10);
-    for (let y = 0; y < height; y += 80) { // Increased from 15 to 80 for performance
+    const antiCopyText = securityText.repeat(15);
+    
+    // Horizontal phantom lines (Trap)
+    for (let y = 0; y < height; y += 20) { 
       page.drawText(antiCopyText, {
-        x: 0, y, size: 4, font: helveticaFont, color: rgb(1, 1, 1), opacity: 0.005,
+        x: 0, y, size: 4, font: helveticaFont, color: rgb(1, 1, 1), opacity: 0.002,
       });
     }
 
-    for (let y = -400; y < height + 400; y += 100) { // Increased from 30 to 100
+    // Diagonal phantom lines (Selection scramble)
+    for (let y = -400; y < height + 400; y += 25) { 
       page.drawText(antiCopyText, {
         x: 0,
         y,
         size: 3,
         font: helveticaFont,
         color: rgb(1, 1, 1),
-        opacity: 0.005,
+        opacity: 0.002,
         rotate: degrees(45),
       });
     }
+
+    // Transparent Selection Trap Rectangle (Inhibits target selection)
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: rgb(1, 1, 1),
+      opacity: 0, // 100% transparent but exists as an object
+    });
   }
 
   return await pdfDoc.save();
