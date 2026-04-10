@@ -54,7 +54,7 @@ async function applySecurityLayers(pdfBytes: Uint8Array, options: PDFExportOptio
       const l2Bytes = await l2Res.arrayBuffer();
       layer2Image = await pdfDoc.embedPng(l2Bytes);
     }
-  } catch (err) {
+  } catch {
     // layer2.png is optional — silently skip
   }
 
